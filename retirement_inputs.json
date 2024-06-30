@@ -1,0 +1,11 @@
+{
+  "annual_return": 0.032,
+  "return_std": 0.03,
+  "current_balance": 1000000,
+  "yearly_spending": 60000,
+  "current_age": 60,
+  "life_expectancy": 90,
+  "num_simulations": 1000,
+  "percentiles": [10, 50, 90],
+  "random_state": 1
+}
