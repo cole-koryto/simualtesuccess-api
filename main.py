@@ -15,7 +15,7 @@ def visualize_percentile_balances(percentile_sets, balance_history):
         for year in balance_history:
             percentile_balance_history[percentile][year] = balance_history[year][percentile_sets[percentile][1]]
 
-        plt.plot(percentile_balance_history[percentile].keys(), percentile_balance_history[percentile].values(), label=f"{percentile}%")
+        plt.plot(list(percentile_balance_history[percentile].keys()), list(percentile_balance_history[percentile].values()), label=f"{percentile}%")
 
     plt.legend(loc='best')
     plt.xlabel("Age")
