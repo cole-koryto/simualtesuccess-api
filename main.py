@@ -1,27 +1,34 @@
 import json
 import math
-
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-from scipy.stats import norm
 from scipy.stats import laplace
+from scipy.stats import norm
 
 
 # visualizes balances of percentiles over simulation
 def visualize_percentile_balances(percentile_sets, balance_history):
+    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
+    # print(colors)
     percentile_balance_history = {}
-    for percentile in percentile_sets:
+    for i, percentile in enumerate(percentile_sets):
         percentile_balance_history[percentile] = {}
         for year in balance_history:
             percentile_balance_history[percentile][year] = balance_history[year][percentile_sets[percentile][1]]
 
         plt.plot(percentile_balance_history[percentile].keys(), percentile_balance_history[percentile].values(), label=f"{percentile}%")
 
+    # extract handles and labels for legend to avoid legend duplication issues
+    handles, labels = [], []
+    for i, percentile in enumerate(percentile_balance_history):
+        handles.append(plt.Line2D([], [], color=colors[i]))
+        labels.append(f"{percentile}%")
+
+    plt.legend(handles, labels, loc='best')
     plt.xlabel("Age")
     plt.ylabel("Balance")
     plt.title("Percentile Balances")
-    plt.legend(loc='best')
     plt.ticklabel_format(style='plain', axis='y')
     plt.axhline(0, color='black', linewidth=0.5)
     plt.show()
@@ -48,27 +55,37 @@ def simulation_summary(balance_history, return_history, input_data):
 
 # visualizes balances given a year #TODO make better figures
 def visualize_year_balance(balance_history, year):
-    # plt.boxplot(balance_history[year])
+    balance_history_adjusted = pd.Series(balance_history[year])
+    balance_history_adjusted = balance_history_adjusted[balance_history_adjusted.between(balance_history_adjusted.quantile(.05), balance_history_adjusted.quantile(.95))]
+
+    # plt.boxplot(balance_history_adjusted)
+    # plt.ylabel("Balance")
+    # plt.title("Final Year Balances")
+    # plt.ticklabel_format(style='plain', axis='y')
     # plt.show()
-    plt.hist(balance_history[year])
+    plt.hist(balance_history_adjusted)
+    plt.xlabel("Balance")
+    plt.ylabel("Frequency")
+    plt.title("Final Year Balances")
+    plt.ticklabel_format(style='plain', axis='x')
     plt.show()
 
 
-# determines net income by year from income and expenses
+# determines net income by year from income and expenses #TODO test growth and inflation
 def get_net_income_by_year(input_data):
     net_income_by_year = {}
-    for year in range(input_data["current_age"], input_data["life_expectancy"]):
+    for year_from_start, year in enumerate(range(input_data["current_age"], input_data["life_expectancy"])):
         new_net_income = 0
 
         # adds all incomes
         for income_dict in input_data["income_dict"].values():
             if income_dict["starting_age"] <= year < income_dict["ending_age"]:
-                new_net_income += income_dict["amount"]
+                new_net_income += income_dict["amount"] * (1+income_dict["growth"])**(year-income_dict["starting_age"])
 
         # adds all expenses
         for expense_dict in input_data["spending_dict"].values():
             if expense_dict["starting_age"] <= year < expense_dict["ending_age"]:
-                new_net_income -= expense_dict["amount"]
+                new_net_income -= expense_dict["amount"] * (1+expense_dict["growth"])**(year-expense_dict["starting_age"]) * (1+input_data["inflation"])**year_from_start
 
         net_income_by_year[year] = new_net_income
 
@@ -91,6 +108,8 @@ def run_simulations(input_data, net_income_by_year):
                                   scale=input_data["return_std"]/math.sqrt(2), #std = sqrt(var), var = 2b^2, std^2 = 2b^2, std = sqrt(2)*b, b = std/sqrt(2)
                                   size=input_data["num_simulations"],
                                   random_state=input_data["random_state"]) #TODO check with Dr. Nordmoe to make sure this makes sense
+        else:
+            raise Exception("Error invalid distribution type")
 
         current_balances = np.multiply(current_balances + net_income_by_year[year], return_dist + 1)  # TODO note this order of applying spending in docs (same as Empower order)
         balance_history[year] = current_balances
@@ -116,7 +135,7 @@ def main():
 
     balance_history, return_history = run_simulations(input_data, net_income_by_year)
 
-    # visualize_year_balance(balance_history, life_expectancy)
+    # visualize_year_balance(balance_history, input_data["life_expectancy"]-1)
 
     simulation_summary(balance_history, return_history, input_data)
 
