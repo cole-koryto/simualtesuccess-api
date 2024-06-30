@@ -10,7 +10,7 @@ from scipy.stats import norm
 # visualizes balances of percentiles over simulation
 def visualize_percentile_balances(percentile_sets, balance_history):
     percentile_balance_history = {}
-    for i, percentile in enumerate(percentile_sets):
+    for percentile in percentile_sets:
         percentile_balance_history[percentile] = {}
         for year in balance_history:
             percentile_balance_history[percentile][year] = balance_history[year][percentile_sets[percentile][1]]
