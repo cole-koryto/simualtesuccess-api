@@ -30,7 +30,7 @@
   {
     "main_expenses":
     {
-      "amount": 100000,
+      "amount": 60000,
       "starting_age": 50,
       "ending_age": 90,
       "growth": 0

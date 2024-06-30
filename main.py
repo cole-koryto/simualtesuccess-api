@@ -9,8 +9,6 @@ from scipy.stats import norm
 
 # visualizes balances of percentiles over simulation
 def visualize_percentile_balances(percentile_sets, balance_history):
-    colors = plt.rcParams['axes.prop_cycle'].by_key()['color']
-    # print(colors)
     percentile_balance_history = {}
     for i, percentile in enumerate(percentile_sets):
         percentile_balance_history[percentile] = {}
@@ -19,13 +17,7 @@ def visualize_percentile_balances(percentile_sets, balance_history):
 
         plt.plot(percentile_balance_history[percentile].keys(), percentile_balance_history[percentile].values(), label=f"{percentile}%")
 
-    # extract handles and labels for legend to avoid legend duplication issues
-    handles, labels = [], []
-    for i, percentile in enumerate(percentile_balance_history):
-        handles.append(plt.Line2D([], [], color=colors[i]))
-        labels.append(f"{percentile}%")
-
-    plt.legend(handles, labels, loc='best')
+    plt.legend(loc='best')
     plt.xlabel("Age")
     plt.ylabel("Balance")
     plt.title("Percentile Balances")
