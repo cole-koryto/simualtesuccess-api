@@ -3,6 +3,7 @@ import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import random
 from scipy.stats import laplace
 from scipy.stats import norm
 
@@ -31,7 +32,7 @@ def get_balance_percentiles(percentiles, final_balances):
     percentile_sets = {}
     for percentile in percentiles:
         found_balance = np.percentile(final_balances, percentile, method="closest_observation")
-        percentile_sets[percentile] = (found_balance, np.where(np.isclose(final_balances, found_balance)))
+        percentile_sets[percentile] = (found_balance, np.where(np.isclose(final_balances, found_balance, rtol=0, atol=0.01)))
 
     return percentile_sets
 
@@ -86,23 +87,27 @@ def get_net_income_by_year(input_data):
 
 # runs simulations to get balance and return histories
 def run_simulations(input_data, net_income_by_year):
+    # generates all random states for return distributons
+    random.seed(input_data["random_state"])
+    random_states = [random.randint(0, 2**32 - 1) for _ in range(input_data["num_simulations"])]
     balance_history = {}
     return_history = {}
     current_balances = np.full(input_data["num_simulations"], input_data["current_balance"])
-    for year in range(input_data["current_age"], input_data["life_expectancy"]):
+    for year_index, year in enumerate(range(input_data["current_age"], input_data["life_expectancy"])):
         if input_data["distribution_type"] == "normal":
             return_dist = norm.rvs(loc=input_data["annual_return"],
                                    scale=input_data["return_std"],
                                    size=input_data["num_simulations"],
-                                   random_state=input_data["random_state"])
+                                   random_state=random_states[year_index])
         elif input_data["distribution_type"] == "laplace":
             return_dist = laplace.rvs(loc=input_data["annual_return"],
                                   scale=input_data["return_std"]/math.sqrt(2), #std = sqrt(var), var = 2b^2, std^2 = 2b^2, std = sqrt(2)*b, b = std/sqrt(2)
                                   size=input_data["num_simulations"],
-                                  random_state=input_data["random_state"]) #TODO check with Dr. Nordmoe to make sure this makes sense
+                                  random_state=random_states[year_index]) #TODO check with Dr. Nordmoe to make sure this makes sense
         else:
             raise Exception("Error invalid distribution type")
 
+        print(return_dist[0])
         current_balances = np.multiply(current_balances + net_income_by_year[year], return_dist + 1)  # TODO note this order of applying spending in docs (same as Empower order)
         balance_history[year] = current_balances
         return_history[year] = return_dist
@@ -134,7 +139,7 @@ def main():
     percentile_sets = get_balance_percentiles(input_data["percentiles"], balance_history[input_data["life_expectancy"]-1])
 
     visualize_percentile_balances(percentile_sets, balance_history)
-
+    
 
 if __name__ == "__main__":
     main()
