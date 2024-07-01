@@ -1,11 +1,16 @@
+from fastapi import FastAPI
 import json
 import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
+from schemas import *
 from scipy.stats import laplace
 from scipy.stats import norm
+
+
+app = FastAPI()
 
 
 # visualizes balances of percentiles over simulation
@@ -121,10 +126,11 @@ def get_simulation_inputs():
         input_data = json.load(read_file)
     if not input_data:
         raise Exception("Error reading in retirement inputs.")
-
+   
     return input_data
 
 
+@app.get("/main/")
 def main():
     input_data = get_simulation_inputs()
 
@@ -139,6 +145,9 @@ def main():
     percentile_sets = get_balance_percentiles(input_data["percentiles"], balance_history[input_data["life_expectancy"]-1])
 
     visualize_percentile_balances(percentile_sets, balance_history)
+    print(percentile_sets)
+    
+    return {"response:": json.dumps(percentile_sets)}
     
 
 if __name__ == "__main__":
