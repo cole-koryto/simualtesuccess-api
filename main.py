@@ -49,7 +49,7 @@ def get_simulation_summary(balance_history, return_history, input_data):
     simulation_summary = {
         "balance_summary": {"min": temp_balance_db.min(), "max": temp_balance_db.max(), "mean": temp_balance_db.mean(), "std": temp_balance_db.std()},
         "return_summary": {"min": temp_return_db.min(), "max": temp_return_db.max(), "mean": temp_return_db.mean(), "std": temp_return_db.std()},
-        "success_rate": np.count_nonzero(balance_history[input_data["life_expectancy"]-1] >= 0) / balance_history[input_data["life_expectancy"]-1].size}
+        "success_rate": sum(balance >= 0 for balance in balance_history[input_data["life_expectancy"]-1]) / len(balance_history[input_data["life_expectancy"]-1])}
     return simulation_summary
 
 
@@ -115,8 +115,8 @@ def run_simulations(input_data, net_income_by_year):
             raise Exception("Error invalid distribution type")
 
         current_balances = np.multiply(current_balances + net_income_by_year[year], return_dist + 1)  # TODO note this order of applying spending in docs (same as Empower order)
-        balance_history[year] = current_balances
-        return_history[year] = return_dist
+        balance_history[year] = current_balances.tolist()
+        return_history[year] = return_dist.tolist()
 
     return balance_history, return_history
 
@@ -132,7 +132,7 @@ def get_simulation_inputs():
 
 
 @app.get("/main/")
-def main():
+def main(simulation_inputs: SimulationPayload = None):
     input_data = get_simulation_inputs()
 
     net_income_by_year = get_net_income_by_year(input_data)
@@ -147,10 +147,10 @@ def main():
     percentile_sets = get_balance_percentiles(input_data["percentiles"], balance_history[input_data["life_expectancy"]-1])
     print(percentile_sets)
 
-    visualize_percentile_balances(percentile_sets, balance_history)
-    
-    return {"simulation_summary": simulation_summary, "percentile_sets:": percentile_sets}
-    
+    # visualize_percentile_balances(percentile_sets, balance_history)
+
+    return {"simulation_summary": simulation_summary, "percentile_sets:": percentile_sets, "balance_history": balance_history, "return_history": return_history, "net_income_by_year": net_income_by_year}
+
 
 if __name__ == "__main__":
     main()
