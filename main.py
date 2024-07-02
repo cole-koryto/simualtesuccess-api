@@ -19,7 +19,7 @@ def visualize_percentile_balances(percentile_sets, balance_history):
     for percentile in percentile_sets:
         percentile_balance_history[percentile] = {}
         for year in balance_history:
-            percentile_balance_history[percentile][year] = balance_history[year][percentile_sets[percentile][1]]
+            percentile_balance_history[percentile][year] = balance_history[year][percentile_sets[percentile]["balance_index"]]
 
         plt.plot(list(percentile_balance_history[percentile].keys()), list(percentile_balance_history[percentile].values()), label=f"{percentile}%")
 
@@ -36,19 +36,21 @@ def visualize_percentile_balances(percentile_sets, balance_history):
 def get_balance_percentiles(percentiles, final_balances):
     percentile_sets = {}
     for percentile in percentiles:
-        found_balance = np.percentile(final_balances, percentile, method="closest_observation")
-        percentile_sets[percentile] = (found_balance, np.where(np.isclose(final_balances, found_balance, rtol=0, atol=0.01)))
+        found_balance = float(np.percentile(final_balances, percentile, method="closest_observation"))
+        percentile_sets[percentile] = {"balance_amount": found_balance, "balance_index": int(np.where(np.isclose(final_balances, found_balance, rtol=0, atol=0.01))[0][0])}
 
     return percentile_sets
 
 
 # prints summary of simulations results
-def simulation_summary(balance_history, return_history, input_data):
-    # gives summary stats of balances and return in final year
-    print(pd.DataFrame(balance_history[input_data["life_expectancy"]-1]).describe())
-    print(pd.DataFrame(return_history[input_data["life_expectancy"]-1]).describe())
-    success_rate = np.count_nonzero(balance_history[input_data["life_expectancy"]-1] >= 0) / balance_history[input_data["life_expectancy"]-1].size
-    print(f"Retirement success % = {success_rate * 100}%")
+def get_simulation_summary(balance_history, return_history, input_data):
+    temp_balance_db = pd.Series(balance_history[input_data["life_expectancy"] - 1])
+    temp_return_db = pd.Series(return_history[input_data["life_expectancy"] - 1])
+    simulation_summary = {
+        "balance_summary": {"min": temp_balance_db.min(), "max": temp_balance_db.max(), "mean": temp_balance_db.mean(), "std": temp_balance_db.std()},
+        "return_summary": {"min": temp_return_db.min(), "max": temp_return_db.max(), "mean": temp_return_db.mean(), "std": temp_return_db.std()},
+        "success_rate": np.count_nonzero(balance_history[input_data["life_expectancy"]-1] >= 0) / balance_history[input_data["life_expectancy"]-1].size}
+    return simulation_summary
 
 
 # visualizes balances given a year #TODO make better figures
@@ -112,7 +114,6 @@ def run_simulations(input_data, net_income_by_year):
         else:
             raise Exception("Error invalid distribution type")
 
-        print(return_dist[0])
         current_balances = np.multiply(current_balances + net_income_by_year[year], return_dist + 1)  # TODO note this order of applying spending in docs (same as Empower order)
         balance_history[year] = current_balances
         return_history[year] = return_dist
@@ -140,14 +141,15 @@ def main():
 
     # visualize_year_balance(balance_history, input_data["life_expectancy"]-1)
 
-    simulation_summary(balance_history, return_history, input_data)
+    simulation_summary = get_simulation_summary(balance_history, return_history, input_data)
+    print(simulation_summary)
 
     percentile_sets = get_balance_percentiles(input_data["percentiles"], balance_history[input_data["life_expectancy"]-1])
+    print(percentile_sets)
 
     visualize_percentile_balances(percentile_sets, balance_history)
-    print(percentile_sets)
     
-    return {"response:": json.dumps(percentile_sets)}
+    return {"simulation_summary": simulation_summary, "percentile_sets:": percentile_sets}
     
 
 if __name__ == "__main__":
