@@ -1,17 +1,19 @@
 from fastapi import FastAPI
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import json
 import math
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
-from schemas import *
+from schemas.input_schemas import SimulationInputPayload
+from schemas.output_schemas import SimulationOutputPayload, SimulationSummary, SummaryStatistics
 from scipy.stats import laplace
 from scipy.stats import norm
 
 
 app = FastAPI()
-
+#app.add_middleware(HTTPSRedirectMiddleware)
 
 # visualizes balances of percentiles over simulation
 def visualize_percentile_balances(percentile_sets, balance_history):
@@ -46,6 +48,23 @@ def get_balance_percentiles(percentiles, final_balances):
 def get_simulation_summary(balance_history, return_history, input_data):
     temp_balance_db = pd.Series(balance_history[input_data["life_expectancy"] - 1])
     temp_return_db = pd.Series(return_history[input_data["life_expectancy"] - 1])
+    """balance_stats = SummaryStatistics(
+        title= "balance_stats",
+        min=temp_balance_db.min(), 
+        max=temp_balance_db.max(), 
+        mean= temp_balance_db.mean(), 
+        std=temp_balance_db.std())
+    return_stats = SummaryStatistics(
+        title= "return_stats",
+        min=temp_return_db.min(), 
+        max=temp_return_db.max(), 
+        mean= temp_return_db.mean(), 
+        std=temp_return_db.std())
+    simulation_summary = SimulationSummary(
+        summaries=[balance_stats, return_stats],
+        success_rate=sum(balance >= 0 for balance in balance_history[input_data["life_expectancy"]-1]) / len(balance_history[input_data["life_expectancy"]-1]))"""
+    
+
     simulation_summary = {
         "balance_summary": {"min": temp_balance_db.min(), "max": temp_balance_db.max(), "mean": temp_balance_db.mean(), "std": temp_balance_db.std()},
         "return_summary": {"min": temp_return_db.min(), "max": temp_return_db.max(), "mean": temp_return_db.mean(), "std": temp_return_db.std()},
@@ -128,11 +147,11 @@ def get_simulation_inputs():
     if not input_data:
         raise Exception("Error reading in retirement inputs.")
    
-    return input_data
+    return input_data    
 
 
 @app.get("/main/")
-def main(simulation_inputs: SimulationPayload = None):
+def main(simulation_inputs: SimulationInputPayload = None):
     input_data = get_simulation_inputs()
 
     net_income_by_year = get_net_income_by_year(input_data)
