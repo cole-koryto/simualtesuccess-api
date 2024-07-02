@@ -11,19 +11,9 @@ class SummaryStatistics(BaseModel):
     
 
 class SimulationSummary(BaseModel):
-    summaries = List[SummaryStatistics]
+    summaries: List[SummaryStatistics]
     success_rate: float
-
-
-
-
-
-
-
-
 
 
 class SimulationOutputPayload(BaseModel):
-    summaries = List[SummaryStatistics]
-    success_rate: float
-    
+    pass
