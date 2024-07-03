@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import json
 import math
@@ -14,6 +15,16 @@ from scipy.stats import norm
 
 app = FastAPI()
 #app.add_middleware(HTTPSRedirectMiddleware)
+
+origins = ["*"]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # visualizes balances of percentiles over simulation
 def visualize_percentile_balances(percentile_sets, balance_history):
@@ -150,8 +161,8 @@ def get_simulation_inputs():
     return input_data    
 
 
-@app.get("/main/")
-def main(simulation_inputs: SimulationInputPayload = None):
+@app.post("/main/")
+def main(simulation_inputs: SimulationInputPayload):
     input_data = get_simulation_inputs()
 
     net_income_by_year = get_net_income_by_year(input_data)
