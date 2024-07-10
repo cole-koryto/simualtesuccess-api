@@ -43,6 +43,17 @@ def visualize_percentile_balances(percentile_sets, balance_history):
     plt.ticklabel_format(style='plain', axis='y')
     plt.axhline(0, color='black', linewidth=0.5)
     plt.show()
+    
+# gets balances of percentiles over simulation
+def get_percentile_balances(percentile_sets, balance_history):
+    percentile_balance_history = {}
+    for percentile in percentile_sets:
+        percentile_balance_history[percentile] = {}
+        for year in balance_history:
+            percentile_balance_history[percentile][year] = balance_history[year][percentile_sets[percentile]["balance_index"]]
+
+    return percentile_balance_history
+
 
 
 # returns the final balances that fall in the given percentiles
@@ -178,8 +189,9 @@ def main(simulation_inputs: SimulationInputPayload):
     print(percentile_sets)
 
     # visualize_percentile_balances(percentile_sets, balance_history)
+    percentile_balance_history = get_percentile_balances(percentile_sets, balance_history)
 
-    return {"simulation_summary": simulation_summary, "percentile_sets:": percentile_sets, "balance_history": balance_history, "return_history": return_history, "net_income_by_year": net_income_by_year}
+    return {"simulation_summary": simulation_summary, "percentile_sets:": percentile_sets, "balance_history": balance_history, "return_history": return_history, "percentile_balance_history": percentile_balance_history, "net_income_by_year": net_income_by_year}
 
 
 if __name__ == "__main__":
