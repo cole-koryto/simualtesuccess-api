@@ -18,9 +18,9 @@ class SimulationInputPayload(BaseModel):
     life_expectancy: int
     inflation: float
     num_simulations: int
-    percentiles: List[int]
+    percentiles: List[float]
     distribution_type: str
-    random_state: int = None
+    random_state: int | None = None
     income_sources: List[Source]
     spending_sources: List[Source]
     

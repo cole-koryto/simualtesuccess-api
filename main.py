@@ -7,17 +7,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
-from schemas.input_schemas import SimulationInputPayload
+from schemas.input_schemas import SimulationInputPayload, Source
 from schemas.output_schemas import SimulationOutputPayload, SimulationSummary, SummaryStatistics
 from scipy.stats import laplace
 from scipy.stats import norm
 
 
+# configure FastAPI 
 app = FastAPI()
 #app.add_middleware(HTTPSRedirectMiddleware)
-
 origins = ["*"]
-
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -67,9 +66,9 @@ def get_balance_percentiles(percentiles, final_balances):
 
 
 # prints summary of simulations results
-def get_simulation_summary(balance_history, return_history, input_data):
-    temp_balance_db = pd.Series(balance_history[input_data["life_expectancy"] - 1])
-    temp_return_db = pd.Series(return_history[input_data["life_expectancy"] - 1])
+def get_simulation_summary(balance_history, return_history, simulation_inputs):
+    temp_balance_db = pd.Series(balance_history[simulation_inputs.life_expectancy - 1])
+    temp_return_db = pd.Series(return_history[simulation_inputs.life_expectancy - 1])
     """balance_stats = SummaryStatistics(
         title= "balance_stats",
         min=temp_balance_db.min(), 
@@ -90,7 +89,7 @@ def get_simulation_summary(balance_history, return_history, input_data):
     simulation_summary = {
         "balance_summary": {"min": temp_balance_db.min(), "max": temp_balance_db.max(), "mean": temp_balance_db.mean(), "std": temp_balance_db.std()},
         "return_summary": {"min": temp_return_db.min(), "max": temp_return_db.max(), "mean": temp_return_db.mean(), "std": temp_return_db.std()},
-        "success_rate": sum(balance >= 0 for balance in balance_history[input_data["life_expectancy"]-1]) / len(balance_history[input_data["life_expectancy"]-1])}
+        "success_rate": sum(balance >= 0 for balance in balance_history[simulation_inputs.life_expectancy-1]) / len(balance_history[simulation_inputs.life_expectancy-1])}
     return simulation_summary
 
 
@@ -113,20 +112,20 @@ def visualize_year_balance(balance_history, year):
 
 
 # determines net income by year from income and expenses #TODO test growth and inflation
-def get_net_income_by_year(input_data):
+def get_net_income_by_year(simulation_inputs):
     net_income_by_year = {}
-    for year_from_start, year in enumerate(range(input_data["current_age"], input_data["life_expectancy"])):
+    for year_from_start, year in enumerate(range(simulation_inputs.current_age, simulation_inputs.life_expectancy)):
         new_net_income = 0
 
         # adds all incomes
-        for income_dict in input_data["income_dict"].values():
-            if income_dict["starting_age"] <= year < income_dict["ending_age"]:
-                new_net_income += income_dict["amount"] * (1+income_dict["growth"])**(year-income_dict["starting_age"])
+        for income_source in simulation_inputs.income_sources:
+            if income_source.starting_age <= year < income_source.ending_age:
+                new_net_income += income_source.amount * (1+income_source.growth)**(year-income_source.starting_age)
 
         # adds all expenses
-        for expense_dict in input_data["spending_dict"].values():
-            if expense_dict["starting_age"] <= year < expense_dict["ending_age"]:
-                new_net_income -= expense_dict["amount"] * (1+expense_dict["growth"])**(year-expense_dict["starting_age"]) * (1+input_data["inflation"])**year_from_start
+        for spending_source in simulation_inputs.spending_sources:
+            if spending_source.starting_age <= year < spending_source.ending_age:
+                new_net_income -= spending_source.amount * (1+spending_source.growth)**(year-spending_source.starting_age) * (1+simulation_inputs.inflation)**year_from_start
 
         net_income_by_year[year] = new_net_income
 
@@ -134,23 +133,23 @@ def get_net_income_by_year(input_data):
 
 
 # runs simulations to get balance and return histories
-def run_simulations(input_data, net_income_by_year):
+def run_simulations(simulation_inputs, net_income_by_year):
     # generates all random states for return distributons
-    random.seed(input_data["random_state"])
-    random_states = [random.randint(0, 2**32 - 1) for _ in range(input_data["num_simulations"])]
+    random.seed(simulation_inputs.random_state)
+    random_states = [random.randint(0, 2**32 - 1) for _ in range(simulation_inputs.num_simulations)]
     balance_history = {}
     return_history = {}
-    current_balances = np.full(input_data["num_simulations"], input_data["current_balance"])
-    for year_index, year in enumerate(range(input_data["current_age"], input_data["life_expectancy"])):
-        if input_data["distribution_type"] == "normal":
-            return_dist = norm.rvs(loc=input_data["annual_return"],
-                                   scale=input_data["return_std"],
-                                   size=input_data["num_simulations"],
+    current_balances = np.full(simulation_inputs.num_simulations, simulation_inputs.current_balance)
+    for year_index, year in enumerate(range(simulation_inputs.current_age, simulation_inputs.life_expectancy)):
+        if simulation_inputs.distribution_type == "normal":
+            return_dist = norm.rvs(loc=simulation_inputs.annual_return,
+                                   scale=simulation_inputs.return_std,
+                                   size=simulation_inputs.num_simulations,
                                    random_state=random_states[year_index])
-        elif input_data["distribution_type"] == "laplace":
-            return_dist = laplace.rvs(loc=input_data["annual_return"],
-                                  scale=input_data["return_std"]/math.sqrt(2), #std = sqrt(var), var = 2b^2, std^2 = 2b^2, std = sqrt(2)*b, b = std/sqrt(2)
-                                  size=input_data["num_simulations"],
+        elif simulation_inputs.distribution_type == "laplace":
+            return_dist = laplace.rvs(loc=simulation_inputs.annual_return,
+                                  scale=simulation_inputs.return_std/math.sqrt(2), #std = sqrt(var), var = 2b^2, std^2 = 2b^2, std = sqrt(2)*b, b = std/sqrt(2)
+                                  size=simulation_inputs.num_simulations,
                                   random_state=random_states[year_index]) #TODO check with Dr. Nordmoe to make sure this makes sense
         else:
             raise Exception("Error invalid distribution type")
@@ -162,30 +161,35 @@ def run_simulations(input_data, net_income_by_year):
     return balance_history, return_history
 
 
-# gets simulation inputs from json #TODO add error checking for inputs
+# gets simulation inputs from json
 def get_simulation_inputs():
     with open("retirement_inputs.json", "r") as read_file:
         input_data = json.load(read_file)
     if not input_data:
         raise Exception("Error reading in retirement inputs.")
+    
+    #income_sources = []
+    #for income_source in input_data["income_dict"]:
+        #income_sources.append(Source())
    
     return input_data    
 
 
 @app.post("/main/")
 def main(simulation_inputs: SimulationInputPayload):
+    print(f"Random state: {simulation_inputs.random_state}")
     input_data = get_simulation_inputs()
 
-    net_income_by_year = get_net_income_by_year(input_data)
+    net_income_by_year = get_net_income_by_year(simulation_inputs)
 
-    balance_history, return_history = run_simulations(input_data, net_income_by_year)
+    balance_history, return_history = run_simulations(simulation_inputs, net_income_by_year)
 
-    # visualize_year_balance(balance_history, input_data["life_expectancy"]-1)
+    # visualize_year_balance(balance_history, simulation_inputs.life_expectancy-1)
 
-    simulation_summary = get_simulation_summary(balance_history, return_history, input_data)
+    simulation_summary = get_simulation_summary(balance_history, return_history, simulation_inputs)
     print(simulation_summary)
 
-    percentile_sets = get_balance_percentiles(input_data["percentiles"], balance_history[input_data["life_expectancy"]-1])
+    percentile_sets = get_balance_percentiles(simulation_inputs.percentiles, balance_history[simulation_inputs.life_expectancy-1])
     print(percentile_sets)
 
     # visualize_percentile_balances(percentile_sets, balance_history)
