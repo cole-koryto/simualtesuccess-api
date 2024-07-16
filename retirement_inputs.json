@@ -9,38 +9,38 @@
   "percentiles": [25, 50, 75],
   "distribution_type": "laplace",
   "random_state": 1,
-  "income_dict":
-  {
-    "main_income":
+  "income_sources":
+  [
     {
+      "title": "main_income",
       "amount": 100000,
       "starting_age": 50,
       "ending_age": 60,
       "growth": 0
     },
-    "social_security":
     {
+      "title": "social_security",
       "amount": 0,
       "starting_age": 70,
       "ending_age": 90,
       "growth": 0
     }
-  },
-  "spending_dict":
-  {
-    "main_expenses":
+  ],
+  "spending_sources":
+  [
     {
+      "title": "main_expenses",
       "amount": 60000,
       "starting_age": 50,
       "ending_age": 90,
       "growth": 0
     },
-    "travel":
     {
+      "title": "travel",
       "amount": 0,
       "starting_age": 55,
       "ending_age": 70,
       "growth": 0
     }
-  }
+  ]
 }
