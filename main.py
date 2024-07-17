@@ -11,6 +11,7 @@ from schemas.input_schemas import SimulationInputPayload, Source
 from schemas.output_schemas import SimulationOutputPayload, SimulationSummary, SummaryStatistics
 from scipy.stats import laplace
 from scipy.stats import norm
+import uvicorn
 
 
 # configure FastAPI 
@@ -204,4 +205,4 @@ def main(simulation_inputs: SimulationInputPayload):
 
 
 if __name__ == "__main__":
-    main()
+    uvicorn.run(app)
