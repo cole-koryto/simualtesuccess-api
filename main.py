@@ -5,7 +5,6 @@ import json
 import math
 # import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import random
 from schemas.input_schemas import SimulationInputPayload, Source
 from schemas.output_schemas import SimulationOutputPayload, SimulationSummary, SummaryStatistics
