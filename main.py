@@ -4,6 +4,7 @@ from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import json
 import math
 # import matplotlib.pyplot as plt
+import pandas as pd
 import numpy as np
 import random
 from schemas.input_schemas import SimulationInputPayload, Source
@@ -42,6 +43,7 @@ app.add_middleware(
     plt.axhline(0, color='black', linewidth=0.5)
     plt.show()"""
     
+    
 # gets balances of percentiles over simulation
 def get_percentile_balances(percentile_sets, balance_history):
     percentile_balance_history = {}
@@ -51,7 +53,6 @@ def get_percentile_balances(percentile_sets, balance_history):
             percentile_balance_history[percentile][year] = balance_history[year][percentile_sets[percentile]["balance_index"]]
 
     return percentile_balance_history
-
 
 
 # returns the final balances that fall in the given percentiles
@@ -77,21 +78,21 @@ def get_simulation_summary(balance_history, return_history, simulation_inputs):
 
 
 # visualizes balances given a year #TODO make better figures
-def visualize_year_balance(balance_history, year):
+"""def visualize_year_balance(balance_history, year):
     balance_history_adjusted = pd.Series(balance_history[year])
     balance_history_adjusted = balance_history_adjusted[balance_history_adjusted.between(balance_history_adjusted.quantile(.05), balance_history_adjusted.quantile(.95))]
 
-    # plt.boxplot(balance_history_adjusted)
-    # plt.ylabel("Balance")
-    # plt.title("Final Year Balances")
-    # plt.ticklabel_format(style='plain', axis='y')
-    # plt.show()
-    # plt.hist(balance_history_adjusted)
-    # plt.xlabel("Balance")
-    # plt.ylabel("Frequency")
-    # plt.title("Final Year Balances")
-    # plt.ticklabel_format(style='plain', axis='x')
-    # plt.show()
+    plt.boxplot(balance_history_adjusted)
+    plt.ylabel("Balance")
+    plt.title("Final Year Balances")
+    plt.ticklabel_format(style='plain', axis='y')
+    plt.show()
+    plt.hist(balance_history_adjusted)
+    plt.xlabel("Balance")
+    plt.ylabel("Frequency")
+    plt.title("Final Year Balances")
+    plt.ticklabel_format(style='plain', axis='x')
+    plt.show()"""
 
 
 # determines total income, total spendign, and net income by year from income and expenses #TODO test growth and inflation
@@ -150,7 +151,7 @@ def run_simulations(simulation_inputs, net_income_by_year):
 
 
 # gets simulation inputs from json
-def get_simulation_inputs():
+"""def get_simulation_inputs():
     with open("retirement_inputs.json", "r") as read_file:
         input_data = json.load(read_file)
     if not input_data:
@@ -160,13 +161,12 @@ def get_simulation_inputs():
     #for income_source in input_data["income_dict"]:
         #income_sources.append(Source())
    
-    return input_data    
+    return input_data   """ 
 
 
 @app.post("/main/")
 def main(simulation_inputs: SimulationInputPayload):
-    print(f"Random state: {simulation_inputs.random_state}")
-    input_data = get_simulation_inputs()
+    #input_data = get_simulation_inputs()
 
     income_by_year, spending_by_year, net_income_by_year = get_cashflows(simulation_inputs)
 
@@ -175,10 +175,8 @@ def main(simulation_inputs: SimulationInputPayload):
     # visualize_year_balance(balance_history, simulation_inputs.life_expectancy-1)
 
     simulation_summary = get_simulation_summary(balance_history, return_history, simulation_inputs)
-    print(simulation_summary)
 
     percentile_sets = get_balance_percentiles(simulation_inputs.percentiles, balance_history[simulation_inputs.life_expectancy-1])
-    print(percentile_sets)
 
     # visualize_percentile_balances(percentile_sets, balance_history)
     percentile_balance_history = get_percentile_balances(percentile_sets, balance_history)
