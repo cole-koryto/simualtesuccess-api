@@ -9,8 +9,7 @@ import pandas as pd
 import random
 from schemas.input_schemas import SimulationInputPayload, Source
 from schemas.output_schemas import SimulationOutputPayload, SimulationSummary, SummaryStatistics
-from scipy.stats import laplace
-from scipy.stats import norm
+from scipy.stats import laplace, norm
 import uvicorn
 
 
