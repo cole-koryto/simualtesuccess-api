@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import json
 import math
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import random
@@ -27,7 +27,7 @@ app.add_middleware(
 )
 
 # visualizes balances of percentiles over simulation
-def visualize_percentile_balances(percentile_sets, balance_history):
+"""def visualize_percentile_balances(percentile_sets, balance_history):
     percentile_balance_history = {}
     for percentile in percentile_sets:
         percentile_balance_history[percentile] = {}
@@ -42,7 +42,7 @@ def visualize_percentile_balances(percentile_sets, balance_history):
     plt.title("Percentile Balances")
     plt.ticklabel_format(style='plain', axis='y')
     plt.axhline(0, color='black', linewidth=0.5)
-    plt.show()
+    plt.show()"""
     
 # gets balances of percentiles over simulation
 def get_percentile_balances(percentile_sets, balance_history):
@@ -70,22 +70,6 @@ def get_balance_percentiles(percentiles, final_balances):
 def get_simulation_summary(balance_history, return_history, simulation_inputs):
     temp_balance_db = pd.Series(balance_history[simulation_inputs.life_expectancy - 1])
     temp_return_db = pd.Series(return_history[simulation_inputs.life_expectancy - 1])
-    """balance_stats = SummaryStatistics(
-        title= "balance_stats",
-        min=temp_balance_db.min(), 
-        max=temp_balance_db.max(), 
-        mean= temp_balance_db.mean(), 
-        std=temp_balance_db.std())
-    return_stats = SummaryStatistics(
-        title= "return_stats",
-        min=temp_return_db.min(), 
-        max=temp_return_db.max(), 
-        mean= temp_return_db.mean(), 
-        std=temp_return_db.std())
-    simulation_summary = SimulationSummary(
-        summaries=[balance_stats, return_stats],
-        success_rate=sum(balance >= 0 for balance in balance_history[input_data["life_expectancy"]-1]) / len(balance_history[input_data["life_expectancy"]-1]))"""
-    
 
     simulation_summary = {
         "balance_summary": {"min": temp_balance_db.min(), "max": temp_balance_db.max(), "mean": temp_balance_db.mean(), "std": temp_balance_db.std()},
@@ -104,12 +88,12 @@ def visualize_year_balance(balance_history, year):
     # plt.title("Final Year Balances")
     # plt.ticklabel_format(style='plain', axis='y')
     # plt.show()
-    plt.hist(balance_history_adjusted)
-    plt.xlabel("Balance")
-    plt.ylabel("Frequency")
-    plt.title("Final Year Balances")
-    plt.ticklabel_format(style='plain', axis='x')
-    plt.show()
+    # plt.hist(balance_history_adjusted)
+    # plt.xlabel("Balance")
+    # plt.ylabel("Frequency")
+    # plt.title("Final Year Balances")
+    # plt.ticklabel_format(style='plain', axis='x')
+    # plt.show()
 
 
 # determines total income, total spendign, and net income by year from income and expenses #TODO test growth and inflation
