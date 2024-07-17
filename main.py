@@ -111,25 +111,30 @@ def visualize_year_balance(balance_history, year):
     plt.show()
 
 
-# determines net income by year from income and expenses #TODO test growth and inflation
-def get_net_income_by_year(simulation_inputs):
+# determines total income, total spendign, and net income by year from income and expenses #TODO test growth and inflation
+def get_cashflows(simulation_inputs):
+    income_by_year = {}
+    spending_by_year = {}
     net_income_by_year = {}
     for year_from_start, year in enumerate(range(simulation_inputs.current_age, simulation_inputs.life_expectancy)):
-        new_net_income = 0
+        total_income = 0
+        total_spending = 0
 
         # adds all incomes
         for income_source in simulation_inputs.income_sources:
             if income_source.starting_age <= year < income_source.ending_age:
-                new_net_income += income_source.amount * (1+income_source.growth)**(year-income_source.starting_age)
+                total_income += income_source.amount * (1+income_source.growth)**(year-income_source.starting_age)
 
         # adds all expenses
         for spending_source in simulation_inputs.spending_sources:
             if spending_source.starting_age <= year < spending_source.ending_age:
-                new_net_income -= spending_source.amount * (1+spending_source.growth)**(year-spending_source.starting_age) * (1+simulation_inputs.inflation)**year_from_start
+                total_spending -= spending_source.amount * (1+spending_source.growth)**(year-spending_source.starting_age) * (1+simulation_inputs.inflation)**year_from_start
 
-        net_income_by_year[year] = new_net_income
+        income_by_year[year] = total_income
+        spending_by_year[year] = total_spending
+        net_income_by_year[year] = total_income + total_spending
 
-    return net_income_by_year
+    return income_by_year, spending_by_year, net_income_by_year 
 
 
 # runs simulations to get balance and return histories
@@ -180,7 +185,7 @@ def main(simulation_inputs: SimulationInputPayload):
     print(f"Random state: {simulation_inputs.random_state}")
     input_data = get_simulation_inputs()
 
-    net_income_by_year = get_net_income_by_year(simulation_inputs)
+    income_by_year, spending_by_year, net_income_by_year = get_cashflows(simulation_inputs)
 
     balance_history, return_history = run_simulations(simulation_inputs, net_income_by_year)
 
@@ -195,7 +200,7 @@ def main(simulation_inputs: SimulationInputPayload):
     # visualize_percentile_balances(percentile_sets, balance_history)
     percentile_balance_history = get_percentile_balances(percentile_sets, balance_history)
 
-    return {"simulation_summary": simulation_summary, "percentile_sets:": percentile_sets, "balance_history": balance_history, "return_history": return_history, "percentile_balance_history": percentile_balance_history, "net_income_by_year": net_income_by_year}
+    return {"simulation_summary": simulation_summary, "percentile_sets:": percentile_sets, "balance_history": balance_history, "return_history": return_history, "percentile_balance_history": percentile_balance_history, "income_by_year": income_by_year, "spending_by_year": spending_by_year, "net_income_by_year": net_income_by_year}
 
 
 if __name__ == "__main__":
