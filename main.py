@@ -1,21 +1,17 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import json
 import math
 # import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
 import random
 from schemas.input_schemas import SimulationInputPayload, Source
-from schemas.output_schemas import SimulationOutputPayload, SimulationSummary, SummaryStatistics
 from scipy.stats import laplace, norm
 import uvicorn
 
 
 # configure FastAPI 
 app = FastAPI()
-#app.add_middleware(HTTPSRedirectMiddleware)
 origins = ["*"]
 app.add_middleware(
     CORSMiddleware,
@@ -66,14 +62,11 @@ def get_balance_percentiles(percentiles, final_balances):
 
 
 # prints summary of simulations results
-def get_simulation_summary(balance_history, return_history, simulation_inputs):
-    temp_balance_db = pd.Series(balance_history[simulation_inputs.life_expectancy - 1])
-    temp_return_db = pd.Series(return_history[simulation_inputs.life_expectancy - 1])
-
+def get_simulation_summary(final_balance_history, final_return_history, simulation_inputs):
     simulation_summary = {
-        "balance_summary": {"min": temp_balance_db.min(), "max": temp_balance_db.max(), "mean": temp_balance_db.mean(), "std": temp_balance_db.std()},
-        "return_summary": {"min": temp_return_db.min(), "max": temp_return_db.max(), "mean": temp_return_db.mean(), "std": temp_return_db.std()},
-        "success_rate": sum(balance >= 0 for balance in balance_history[simulation_inputs.life_expectancy-1]) / len(balance_history[simulation_inputs.life_expectancy-1])}
+        "balance_summary": {"min": np.min(final_balance_history), "max": np.max(final_balance_history), "mean": np.mean(final_balance_history), "std": np.std(final_balance_history)},
+        "return_summary": {"min": np.min(final_return_history), "max": np.max(final_return_history), "mean": np.mean(final_return_history), "std": np.std(final_return_history)},
+        "success_rate": sum(balance >= 0 for balance in final_balance_history) / len(final_balance_history)}
     return simulation_summary
 
 
@@ -174,7 +167,7 @@ def main(simulation_inputs: SimulationInputPayload):
 
     # visualize_year_balance(balance_history, simulation_inputs.life_expectancy-1)
 
-    simulation_summary = get_simulation_summary(balance_history, return_history, simulation_inputs)
+    simulation_summary = get_simulation_summary(balance_history[simulation_inputs.life_expectancy - 1], return_history[simulation_inputs.life_expectancy - 1], simulation_inputs)
 
     percentile_sets = get_balance_percentiles(simulation_inputs.percentiles, balance_history[simulation_inputs.life_expectancy-1])
 
