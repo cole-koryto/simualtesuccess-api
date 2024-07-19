@@ -157,7 +157,7 @@ def run_simulations(simulation_inputs, net_income_by_year):
     return input_data   """ 
 
 
-@app.post("/main/")
+@app.post("/")
 def main(simulation_inputs: SimulationInputPayload):
     #input_data = get_simulation_inputs()
 
@@ -178,4 +178,4 @@ def main(simulation_inputs: SimulationInputPayload):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)
