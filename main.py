@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import json
 import math
 # import matplotlib.pyplot as plt
@@ -13,6 +14,7 @@ import uvicorn
 # configure FastAPI 
 app = FastAPI()
 origins = ["*"]
+app.add_middleware(HTTPSRedirectMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -178,4 +180,5 @@ def main(simulation_inputs: SimulationInputPayload):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True, ssl_keyfile="path/to/key.pem", ssl_certfile="path/to/cert.pem")
+#https://plusminuschirag.medium.com/deploying-apis-with-custom-domains-with-nginx-lets-encrypt-fastapi-and-uvicorn-619438168143
