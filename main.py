@@ -176,7 +176,7 @@ def main(simulation_inputs: SimulationInputPayload):
     # visualize_percentile_balances(percentile_sets, balance_history)
     percentile_balance_history = get_percentile_balances(percentile_sets, balance_history)
 
-    return {"simulation_summary": simulation_summary, "percentile_sets:": percentile_sets, "balance_history": balance_history, "return_history": return_history, "percentile_balance_history": percentile_balance_history, "income_by_year": income_by_year, "spending_by_year": spending_by_year, "net_income_by_year": net_income_by_year}
+    return {"simulation_summary": simulation_summary, "percentile_sets": percentile_sets, "balance_history": balance_history, "return_history": return_history, "percentile_balance_history": percentile_balance_history, "income_by_year": income_by_year, "spending_by_year": spending_by_year, "net_income_by_year": net_income_by_year}
 
 
 if __name__ == "__main__":
