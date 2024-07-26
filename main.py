@@ -118,9 +118,8 @@ def get_cashflows(simulation_inputs):
 
 # runs simulations to get balance and return histories
 def run_simulations(simulation_inputs, net_income_by_year):
-    # generates all random states for return distributons
+    # generates all random states for return distributions
     random.seed(simulation_inputs.random_state)
-    random_states = [random.randint(0, 2**32 - 1) for _ in range(simulation_inputs.num_simulations)]
     balance_history = {}
     return_history = {}
     current_balances = np.full(simulation_inputs.num_simulations, simulation_inputs.current_balance)
@@ -129,12 +128,12 @@ def run_simulations(simulation_inputs, net_income_by_year):
             return_dist = norm.rvs(loc=simulation_inputs.annual_return,
                                    scale=simulation_inputs.return_std,
                                    size=simulation_inputs.num_simulations,
-                                   random_state=random_states[year_index])
+                                   random_state=random.randint(0, 2**32 - 1))
         elif simulation_inputs.distribution_type == "laplace":
             return_dist = laplace.rvs(loc=simulation_inputs.annual_return,
                                   scale=simulation_inputs.return_std/math.sqrt(2), #std = sqrt(var), var = 2b^2, std^2 = 2b^2, std = sqrt(2)*b, b = std/sqrt(2)
                                   size=simulation_inputs.num_simulations,
-                                  random_state=random_states[year_index]) #TODO check with Dr. Nordmoe to make sure this makes sense
+                                  random_state=random.randint(0, 2**32 - 1)) #TODO check with Dr. Nordmoe to make sure this makes sense
         else:
             raise Exception("Error invalid distribution type")
 
