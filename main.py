@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 import json
@@ -160,6 +160,9 @@ def run_simulations(simulation_inputs, net_income_by_year):
 
 @app.post("/")
 def main(simulation_inputs: SimulationInputPayload):
+    if simulation_inputs.num_simulations > 10000:
+        raise HTTPException(status_code=400, detail="num_simulations cannot be greater than 10000")
+
     #input_data = get_simulation_inputs()
 
     income_by_year, spending_by_year, net_income_by_year = get_cashflows(simulation_inputs)

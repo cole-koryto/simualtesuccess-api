@@ -1,0 +1,16 @@
+[Unit]
+Description=Retirement Calculation Application
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+WorkingDirectory=/home/ubuntu/retirement-calc
+ExecStart=/home/ubuntu/retirement-calc/server_startup.sh
+Restart=always
+RestartSec=10
+Environment="PATH=/home/ubuntu/retirement-calc/venv/bin"
+
+[Install]
+WantedBy=multi-user.target
