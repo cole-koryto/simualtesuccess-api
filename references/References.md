@@ -17,3 +17,5 @@ https://medium.com/aspiring-data-scientist/deploy-a-fastapi-app-on-aws-ecs-034b8
 https://medium.com/@vanyamyshkin/deploy-python-fastapi-for-free-on-aws-ec2-050b46744366
 
 also may help with gunicorn - https://dev.to/nick_langat/how-to-deploy-a-fastapi-app-to-aws-ec2-server-46d4
+
+ngnix CORS setup - https://enable-cors.org/server_nginx.html
