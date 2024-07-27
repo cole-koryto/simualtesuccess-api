@@ -15,13 +15,13 @@ import uvicorn
 app = FastAPI()
 origins = ["*"]
 app.add_middleware(HTTPSRedirectMiddleware)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+#app.add_middleware(
+ #   CORSMiddleware,
+  #  allow_origins=origins,
+   # allow_credentials=True,
+   # allow_methods=["*"],
+    #allow_headers=["*"],
+#)
 
 # visualizes balances of percentiles over simulation
 """def visualize_percentile_balances(percentile_sets, balance_history):
