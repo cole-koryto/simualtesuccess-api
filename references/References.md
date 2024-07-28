@@ -19,3 +19,10 @@ https://medium.com/@vanyamyshkin/deploy-python-fastapi-for-free-on-aws-ec2-050b4
 also may help with gunicorn - https://dev.to/nick_langat/how-to-deploy-a-fastapi-app-to-aws-ec2-server-46d4
 
 ngnix CORS setup - https://enable-cors.org/server_nginx.html
+
+laplace scale (b) calculation:
+std = sqrt(var)
+var = 2b^2
+std^2 = 2b^2
+std = sqrt(2)*b
+b = std/sqrt(2)

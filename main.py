@@ -1,9 +1,6 @@
 from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
-import json
 import math
-# import matplotlib.pyplot as plt
 import numpy as np
 import random
 from schemas.input_schemas import SimulationInputPayload, Source
@@ -13,34 +10,8 @@ import uvicorn
 
 # configure FastAPI 
 app = FastAPI()
-origins = ["*"]
 app.add_middleware(HTTPSRedirectMiddleware)
-#app.add_middleware(
- #   CORSMiddleware,
-  #  allow_origins=origins,
-   # allow_credentials=True,
-   # allow_methods=["*"],
-    #allow_headers=["*"],
-#)
 
-# visualizes balances of percentiles over simulation
-"""def visualize_percentile_balances(percentile_sets, balance_history):
-    percentile_balance_history = {}
-    for percentile in percentile_sets:
-        percentile_balance_history[percentile] = {}
-        for year in balance_history:
-            percentile_balance_history[percentile][year] = balance_history[year][percentile_sets[percentile]["balance_index"]]
-
-        plt.plot(list(percentile_balance_history[percentile].keys()), list(percentile_balance_history[percentile].values()), label=f"{percentile}%")
-
-    plt.legend(loc='best')
-    plt.xlabel("Age")
-    plt.ylabel("Balance")
-    plt.title("Percentile Balances")
-    plt.ticklabel_format(style='plain', axis='y')
-    plt.axhline(0, color='black', linewidth=0.5)
-    plt.show()"""
-    
     
 # gets balances of percentiles over simulation
 def get_percentile_balances(percentile_sets, balance_history):
@@ -70,24 +41,6 @@ def get_simulation_summary(final_balance_history, final_return_history, simulati
         "return_summary": {"min": np.min(final_return_history), "max": np.max(final_return_history), "mean": np.mean(final_return_history), "std": np.std(final_return_history)},
         "success_rate": sum(balance >= 0 for balance in final_balance_history) / len(final_balance_history)}
     return simulation_summary
-
-
-# visualizes balances given a year #TODO make better figures
-"""def visualize_year_balance(balance_history, year):
-    balance_history_adjusted = pd.Series(balance_history[year])
-    balance_history_adjusted = balance_history_adjusted[balance_history_adjusted.between(balance_history_adjusted.quantile(.05), balance_history_adjusted.quantile(.95))]
-
-    plt.boxplot(balance_history_adjusted)
-    plt.ylabel("Balance")
-    plt.title("Final Year Balances")
-    plt.ticklabel_format(style='plain', axis='y')
-    plt.show()
-    plt.hist(balance_history_adjusted)
-    plt.xlabel("Balance")
-    plt.ylabel("Frequency")
-    plt.title("Final Year Balances")
-    plt.ticklabel_format(style='plain', axis='x')
-    plt.show()"""
 
 
 # determines total income, total spendign, and net income by year from income and expenses #TODO test growth and inflation
@@ -131,9 +84,9 @@ def run_simulations(simulation_inputs, net_income_by_year):
                                    random_state=random.randint(0, 2**32 - 1))
         elif simulation_inputs.distribution_type == "laplace":
             return_dist = laplace.rvs(loc=simulation_inputs.annual_return,
-                                  scale=simulation_inputs.return_std/math.sqrt(2), #std = sqrt(var), var = 2b^2, std^2 = 2b^2, std = sqrt(2)*b, b = std/sqrt(2)
+                                  scale=simulation_inputs.return_std/math.sqrt(2),
                                   size=simulation_inputs.num_simulations,
-                                  random_state=random.randint(0, 2**32 - 1)) #TODO check with Dr. Nordmoe to make sure this makes sense
+                                  random_state=random.randint(0, 2**32 - 1))
         else:
             raise Exception("Error invalid distribution type")
 
@@ -144,38 +97,19 @@ def run_simulations(simulation_inputs, net_income_by_year):
     return balance_history, return_history
 
 
-# gets simulation inputs from json
-"""def get_simulation_inputs():
-    with open("retirement_inputs.json", "r") as read_file:
-        input_data = json.load(read_file)
-    if not input_data:
-        raise Exception("Error reading in retirement inputs.")
-    
-    #income_sources = []
-    #for income_source in input_data["income_dict"]:
-        #income_sources.append(Source())
-   
-    return input_data   """ 
-
-
 @app.post("/")
 def main(simulation_inputs: SimulationInputPayload):
     if simulation_inputs.num_simulations > 10000:
         raise HTTPException(status_code=400, detail="num_simulations cannot be greater than 10000")
 
-    #input_data = get_simulation_inputs()
-
     income_by_year, spending_by_year, net_income_by_year = get_cashflows(simulation_inputs)
 
     balance_history, return_history = run_simulations(simulation_inputs, net_income_by_year)
-
-    # visualize_year_balance(balance_history, simulation_inputs.life_expectancy-1)
 
     simulation_summary = get_simulation_summary(balance_history[simulation_inputs.life_expectancy - 1], return_history[simulation_inputs.life_expectancy - 1], simulation_inputs)
 
     percentile_sets = get_balance_percentiles(simulation_inputs.percentiles, balance_history[simulation_inputs.life_expectancy-1])
 
-    # visualize_percentile_balances(percentile_sets, balance_history)
     percentile_balance_history = get_percentile_balances(percentile_sets, balance_history)
 
     return {"simulation_summary": simulation_summary, "percentile_sets": percentile_sets, "balance_history": balance_history, "return_history": return_history, "percentile_balance_history": percentile_balance_history, "income_by_year": income_by_year, "spending_by_year": spending_by_year, "net_income_by_year": net_income_by_year}

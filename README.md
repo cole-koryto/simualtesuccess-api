@@ -1,4 +1,4 @@
-# Simualte Success Backend API
+# Simulate Success Backend API
 
 ## Purpose
 
