@@ -5,7 +5,7 @@ The purpose of this project is to create an API backend that runs Monte Carlo si
 
 ## Inputs
 
-See front [frontend documentaion for variable descriptions](https://github.com/cole-koryto/simulatesuccess-frontend/tree/main).
+See front [frontend documentation for variable descriptions](https://github.com/cole-koryto/simulatesuccess-frontend/tree/main).
 
 For raw inputs, see [schemas/input_schemas.py](https://github.com/cole-koryto/simualtesuccess-api/blob/main/schemas/input_schemas.py).
 
@@ -26,11 +26,11 @@ income_by_year: json with the total income at each age.
 
 spending_by_year: json with the total spending at each age.
 
-net_income_by_year: json with the net income e at each age.
+net_income_by_year: json with the net income at each age.
 
 ## Usage
 
-Send POST requst to https://simulatesuccess.info/ with a request following the SimulationInputPayload schema.
+Send POST request to https://simulatesuccess.info/ with a request following the SimulationInputPayload schema.
 
 ## Setup
 
